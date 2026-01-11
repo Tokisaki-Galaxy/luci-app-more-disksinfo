@@ -283,3 +283,72 @@ msgstr "пройден"
 
 msgid "да"
 msgstr ""
+
+msgid "Alignment"
+msgstr "Выравнивание"
+
+msgid "Amount of available logical eraseblocks"
+msgstr "Количество доступных логических блоков стирания"
+
+msgid "Character device major/minor"
+msgstr "Символьное устройство major/minor"
+
+msgid "Count of bad physical eraseblocks"
+msgstr "Количество плохих физических блоков стирания"
+
+msgid "Count of reserved physical eraseblocks"
+msgstr "Количество зарезервированных физических блоков стирания"
+
+msgid "Count of UBI devices"
+msgstr "Количество UBI устройств"
+
+msgid "Current maximum erase counter value"
+msgstr "Текущее максимальное значение счётчика стирания"
+
+msgid "Logical eraseblock size"
+msgstr "Размер логического блока стирания"
+
+msgid "Maximum count of volumes"
+msgstr "Максимальное количество томов"
+
+msgid "Minimum input/output unit size"
+msgstr "Минимальный размер блока ввода/вывода"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "NAND Devices (UBI)"
+msgstr "NAND устройства (UBI)"
+
+msgid "No volumes available"
+msgstr "Нет доступных томов"
+
+msgid "State"
+msgstr "Состояние"
+
+msgid "Status of connected NAND/UBI devices."
+msgstr "Состояние подключенных NAND/UBI устройств."
+
+msgid "Total amount of logical eraseblocks"
+msgstr "Общее количество логических блоков стирания"
+
+msgid "UBI control device major/minor"
+msgstr "Управляющее устройство UBI major/minor"
+
+msgid "UBI Device Information"
+msgstr "Информация об устройстве UBI"
+
+msgid "UBI Global Information"
+msgstr "Глобальная информация UBI"
+
+msgid "UBI version"
+msgstr "Версия UBI"
+
+msgid "UBI Volumes"
+msgstr "Тома UBI"
+
+msgid "Volume ID"
+msgstr "Идентификатор тома"
+
+msgid "Volumes count"
+msgstr "Количество томов"

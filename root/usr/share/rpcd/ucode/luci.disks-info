@@ -3,10 +3,13 @@
 
 import { lsdir, popen } from 'fs';
 
-const fdiskPattern = '/usr/sbin/fdisk -lo Device,Start,End,Sectors,Size,Type %s 2> /dev/null';
-const dfPattern    = '/bin/df -Th %s 2> /dev/null';
-const deviceRegexp = /^((h|s)d[a-z]|nvme[0-9]+n[0-9]+)$/;
-const devicesDir   = '/dev';
+const fdiskPattern  = '/usr/sbin/fdisk -lo Device,Start,End,Sectors,Size,Type %s 2> /dev/null';
+const dfPattern     = '/bin/df -Th %s 2> /dev/null';
+const ubinfoPattern = '/usr/sbin/ubinfo -a 2> /dev/null';
+const deviceRegexp  = /^((h|s)d[a-z]|nvme[0-9]+n[0-9]+)$/;
+const ubiDevRegexp  = /^ubi[0-9]+$/;
+const devicesDir    = '/dev';
+const ubiClassDir   = '/sys/class/ubi';
 
 function getCmdOutput(cmd) {
 	let ret  = '';
@@ -99,6 +102,158 @@ function getDfData(partition) {
 	return fsDict;
 }
 
+function getUbiDevices() {
+	let devices = lsdir(ubiClassDir);
+	if(devices) {
+		devices = filter(devices, e => match(e, ubiDevRegexp));
+	}
+	return devices ?? [];
+}
+
+function parseUbinfoOutput() {
+	let output = getCmdOutput(ubinfoPattern);
+	if(!output || length(output) == 0) {
+		return null;
+	}
+
+	let result = {
+		version: null,
+		deviceCount: null,
+		controlDevice: null,
+		presentDevices: [],
+		devices: {}
+	};
+
+	// Split by device sections
+	let sections = split(output, /\n(?=ubi[0-9]+\n)/);
+
+	// Parse global info from first section
+	if(length(sections) > 0) {
+		let globalLines = split(sections[0], '\n');
+		for(let line in globalLines) {
+			let m;
+			if((m = match(line, /^UBI version:\s+(.+)$/))) {
+				result.version = m[1];
+			} else if((m = match(line, /^Count of UBI devices:\s+(.+)$/))) {
+				result.deviceCount = m[1];
+			} else if((m = match(line, /^UBI control device major\/minor:\s+(.+)$/))) {
+				result.controlDevice = m[1];
+			} else if((m = match(line, /^Present UBI devices:\s+(.+)$/))) {
+				result.presentDevices = map(split(m[1], /,\s*/), e => trim(e));
+			}
+		}
+	}
+
+	// Parse each device section
+	for(let i = 1; i < length(sections); i++) {
+		let section = sections[i];
+		let lines = split(section, '\n');
+		let deviceName = null;
+		let deviceInfo = {
+			volumesCount: null,
+			lebSize: null,
+			totalLebs: null,
+			availableLebs: null,
+			maxVolumes: null,
+			badPebs: null,
+			reservedPebs: null,
+			maxEraseCounter: null,
+			minIoSize: null,
+			charDevice: null,
+			presentVolumes: [],
+			volumes: []
+		};
+
+		// First line is device name
+		if(length(lines) > 0) {
+			deviceName = trim(lines[0]);
+		}
+
+		let currentVolume = null;
+		let inVolumeSection = false;
+
+		for(let j = 1; j < length(lines); j++) {
+			let line = trim(lines[j]);
+			let m;
+
+			// Volume section starts with "Volume ID:"
+			if((m = match(line, /^Volume ID:\s+(\d+)\s+\(on\s+(\w+)\)$/))) {
+				if(currentVolume) {
+					push(deviceInfo.volumes, currentVolume);
+				}
+				inVolumeSection = true;
+				currentVolume = {
+					id: m[1],
+					parentDevice: m[2],
+					type: null,
+					alignment: null,
+					size: null,
+					state: null,
+					name: null,
+					charDevice: null
+				};
+			} else if(line == '-----------------------------------') {
+				if(currentVolume) {
+					push(deviceInfo.volumes, currentVolume);
+					currentVolume = null;
+				}
+				inVolumeSection = false;
+			} else if(inVolumeSection && currentVolume) {
+				// Parse volume info
+				if((m = match(line, /^Type:\s+(.+)$/))) {
+					currentVolume.type = m[1];
+				} else if((m = match(line, /^Alignment:\s+(.+)$/))) {
+					currentVolume.alignment = m[1];
+				} else if((m = match(line, /^Size:\s+(.+)$/))) {
+					currentVolume.size = m[1];
+				} else if((m = match(line, /^State:\s+(.+)$/))) {
+					currentVolume.state = m[1];
+				} else if((m = match(line, /^Name:\s+(.+)$/))) {
+					currentVolume.name = m[1];
+				} else if((m = match(line, /^Character device major\/minor:\s+(.+)$/))) {
+					currentVolume.charDevice = m[1];
+				}
+			} else {
+				// Parse device info
+				if((m = match(line, /^Volumes count:\s+(.+)$/))) {
+					deviceInfo.volumesCount = m[1];
+				} else if((m = match(line, /^Logical eraseblock size:\s+(.+)$/))) {
+					deviceInfo.lebSize = m[1];
+				} else if((m = match(line, /^Total amount of logical eraseblocks:\s+(.+)$/))) {
+					deviceInfo.totalLebs = m[1];
+				} else if((m = match(line, /^Amount of available logical eraseblocks:\s+(.+)$/))) {
+					deviceInfo.availableLebs = m[1];
+				} else if((m = match(line, /^Maximum count of volumes:?\s+(.+)$/))) {
+					deviceInfo.maxVolumes = m[1];
+				} else if((m = match(line, /^Count of bad physical eraseblocks:\s+(.+)$/))) {
+					deviceInfo.badPebs = m[1];
+				} else if((m = match(line, /^Count of reserved physical eraseblocks:\s+(.+)$/))) {
+					deviceInfo.reservedPebs = m[1];
+				} else if((m = match(line, /^Current maximum erase counter value:\s+(.+)$/))) {
+					deviceInfo.maxEraseCounter = m[1];
+				} else if((m = match(line, /^Minimum input\/output unit size:\s+(.+)$/))) {
+					deviceInfo.minIoSize = m[1];
+				} else if((m = match(line, /^Character device major\/minor:\s+(.+)$/))) {
+					deviceInfo.charDevice = m[1];
+				} else if((m = match(line, /^Present volumes:\s+(.+)$/))) {
+					deviceInfo.presentVolumes = map(split(m[1], /,\s*/), e => trim(e));
+				}
+			}
+		}
+
+		// Add last volume if exists
+		if(currentVolume) {
+			push(deviceInfo.volumes, currentVolume);
+		}
+
+		if(deviceName) {
+			result.devices[deviceName] = deviceInfo;
+		}
+	}
+
+	return result;
+}
+
 const methods = {
 	getDevices: {
 		call: function() {
@@ -130,6 +285,13 @@ const methods = {
 				data['fdisk'] = fdiskData;
 				data['df']    = dfData;
 			}
+
+			// Add UBI device information
+			const ubiDevices = getUbiDevices();
+			if(length(ubiDevices) > 0) {
+				data['ubi'] = parseUbinfoOutput();
+			}
+
 			return data;
 		}
 	}

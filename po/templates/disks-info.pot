@@ -273,3 +273,72 @@ msgstr ""
 
 msgid "yes"
 msgstr ""
+
+msgid "Alignment"
+msgstr ""
+
+msgid "Amount of available logical eraseblocks"
+msgstr ""
+
+msgid "Character device major/minor"
+msgstr ""
+
+msgid "Count of bad physical eraseblocks"
+msgstr ""
+
+msgid "Count of reserved physical eraseblocks"
+msgstr ""
+
+msgid "Count of UBI devices"
+msgstr ""
+
+msgid "Current maximum erase counter value"
+msgstr ""
+
+msgid "Logical eraseblock size"
+msgstr ""
+
+msgid "Maximum count of volumes"
+msgstr ""
+
+msgid "Minimum input/output unit size"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "NAND Devices (UBI)"
+msgstr ""
+
+msgid "No volumes available"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Status of connected NAND/UBI devices."
+msgstr ""
+
+msgid "Total amount of logical eraseblocks"
+msgstr ""
+
+msgid "UBI control device major/minor"
+msgstr ""
+
+msgid "UBI Device Information"
+msgstr ""
+
+msgid "UBI Global Information"
+msgstr ""
+
+msgid "UBI version"
+msgstr ""
+
+msgid "UBI Volumes"
+msgstr ""
+
+msgid "Volume ID"
+msgstr ""
+
+msgid "Volumes count"
+msgstr ""

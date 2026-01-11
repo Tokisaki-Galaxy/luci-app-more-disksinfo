@@ -347,3 +347,72 @@ msgstr "推荐最低工作温度"
 
 msgid "Solid State Device"
 msgstr "固态硬盘"
+
+msgid "Alignment"
+msgstr "对齐"
+
+msgid "Amount of available logical eraseblocks"
+msgstr "可用逻辑擦除块数量"
+
+msgid "Character device major/minor"
+msgstr "字符设备主/次设备号"
+
+msgid "Count of bad physical eraseblocks"
+msgstr "坏物理擦除块数量"
+
+msgid "Count of reserved physical eraseblocks"
+msgstr "保留物理擦除块数量"
+
+msgid "Count of UBI devices"
+msgstr "UBI 设备数量"
+
+msgid "Current maximum erase counter value"
+msgstr "当前最大擦除计数值"
+
+msgid "Logical eraseblock size"
+msgstr "逻辑擦除块大小"
+
+msgid "Maximum count of volumes"
+msgstr "最大卷数量"
+
+msgid "Minimum input/output unit size"
+msgstr "最小输入/输出单元大小"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "NAND Devices (UBI)"
+msgstr "NAND 设备 (UBI)"
+
+msgid "No volumes available"
+msgstr "没有可用卷"
+
+msgid "State"
+msgstr "状态"
+
+msgid "Status of connected NAND/UBI devices."
+msgstr "已连接 NAND/UBI 设备的状态"
+
+msgid "Total amount of logical eraseblocks"
+msgstr "逻辑擦除块总数"
+
+msgid "UBI control device major/minor"
+msgstr "UBI 控制设备主/次设备号"
+
+msgid "UBI Device Information"
+msgstr "UBI 设备信息"
+
+msgid "UBI Global Information"
+msgstr "UBI 全局信息"
+
+msgid "UBI version"
+msgstr "UBI 版本"
+
+msgid "UBI Volumes"
+msgstr "UBI 卷"
+
+msgid "Volume ID"
+msgstr "卷 ID"
+
+msgid "Volumes count"
+msgstr "卷数量"

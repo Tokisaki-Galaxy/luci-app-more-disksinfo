@@ -855,6 +855,164 @@ return view.extend({
 		]);
 	},
 
+	createUbiDeviceTable(deviceName, deviceInfo) {
+		let deviceInfoTable = E('table', { 'class': 'table' });
+
+		let infoRows = [
+			[_('Volumes count'), deviceInfo.volumesCount],
+			[_('Logical eraseblock size'), deviceInfo.lebSize],
+			[_('Total amount of logical eraseblocks'), deviceInfo.totalLebs],
+			[_('Amount of available logical eraseblocks'), deviceInfo.availableLebs],
+			[_('Maximum count of volumes'), deviceInfo.maxVolumes],
+			[_('Count of bad physical eraseblocks'), deviceInfo.badPebs],
+			[_('Count of reserved physical eraseblocks'), deviceInfo.reservedPebs],
+			[_('Current maximum erase counter value'), deviceInfo.maxEraseCounter],
+			[_('Minimum input/output unit size'), deviceInfo.minIoSize],
+			[_('Character device major/minor'), deviceInfo.charDevice],
+		];
+
+		for(let row of infoRows) {
+			if(row[1] !== null) {
+				let rowClass = 'tr';
+				// Highlight bad blocks if > 0
+				if(row[0] === _('Count of bad physical eraseblocks') && parseInt(row[1]) > 0) {
+					rowClass = 'tr disks-info-warn';
+				}
+				deviceInfoTable.append(
+					E('tr', { 'class': rowClass }, [
+						E('td', { 'class': 'td left', 'style': 'width:50%' }, row[0] + ':'),
+						E('td', { 'class': 'td left' }, row[1]),
+					])
+				);
+			}
+		}
+
+		return E('div', { 'class': 'cbi-value' }, [
+			E('h3', {}, _('UBI Device Information') + ':'),
+			deviceInfoTable,
+		]);
+	},
+
+	createUbiVolumesTable(volumes) {
+		let volumesTableTitles = [
+			_('Volume ID'),
+			_('Name'),
+			_('Type'),
+			_('Size'),
+			_('State'),
+			_('Alignment'),
+		];
+		let volumesTable = E('table', { 'class': 'table' },
+			E('tr', { 'class': 'tr table-titles' }, [
+				E('th', { 'class': 'th left' }, volumesTableTitles[0]),
+				E('th', { 'class': 'th left' }, volumesTableTitles[1]),
+				E('th', { 'class': 'th left' }, volumesTableTitles[2]),
+				E('th', { 'class': 'th left' }, volumesTableTitles[3]),
+				E('th', { 'class': 'th left' }, volumesTableTitles[4]),
+				E('th', { 'class': 'th left' }, volumesTableTitles[5]),
+			])
+		);
+
+		if(volumes && volumes.length > 0) {
+			for(let vol of volumes) {
+				let stateClass = (vol.state === 'OK') ? 'td left' : 'td left disks-info-warn';
+				volumesTable.append(
+					E('tr', { 'class': 'tr' }, [
+						E('td', {
+							'class': 'td left',
+							'data-title': volumesTableTitles[0],
+						}, vol.id),
+						E('td', {
+							'class': 'td left',
+							'data-title': volumesTableTitles[1],
+						}, vol.name || '-'),
+						E('td', {
+							'class': 'td left',
+							'data-title': volumesTableTitles[2],
+						}, vol.type || '-'),
+						E('td', {
+							'class': 'td left',
+							'data-title': volumesTableTitles[3],
+						}, vol.size || '-'),
+						E('td', {
+							'class': stateClass,
+							'data-title': volumesTableTitles[4],
+						}, vol.state || '-'),
+						E('td', {
+							'class': 'td left',
+							'data-title': volumesTableTitles[5],
+						}, vol.alignment || '-'),
+					])
+				);
+			}
+		} else {
+			volumesTable.append(
+				E('tr', { 'class': 'tr placeholder' },
+					E('td', { 'class': 'td' },
+						E('em', {}, _('No volumes available'))
+					)
+				)
+			);
+		}
+
+		return E('div', { 'class': 'cbi-value' }, [
+			E('h3', {}, _('UBI Volumes') + ':'),
+			volumesTable,
+		]);
+	},
+
+	createUbiSection(ubiData) {
+		if(!ubiData || !ubiData.devices) {
+			return null;
+		}
+
+		let ubiSection = E('div', {});
+
+		// Global UBI info
+		let globalInfoTable = E('table', { 'class': 'table' });
+		if(ubiData.version) {
+			globalInfoTable.append(
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'style': 'width:50%' }, _('UBI version') + ':'),
+					E('td', { 'class': 'td left' }, ubiData.version),
+				])
+			);
+		}
+		if(ubiData.deviceCount) {
+			globalInfoTable.append(
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'style': 'width:50%' }, _('Count of UBI devices') + ':'),
+					E('td', { 'class': 'td left' }, ubiData.deviceCount),
+				])
+			);
+		}
+		if(ubiData.controlDevice) {
+			globalInfoTable.append(
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'style': 'width:50%' }, _('UBI control device major/minor') + ':'),
+					E('td', { 'class': 'td left' }, ubiData.controlDevice),
+				])
+			);
+		}
+
+		if(globalInfoTable.children.length > 0) {
+			ubiSection.append(
+				E('div', { 'class': 'cbi-value' }, [
+					E('h3', {}, _('UBI Global Information') + ':'),
+					globalInfoTable,
+				])
+			);
+		}
+
+		// Per-device information
+		for(let [deviceName, deviceInfo] of Object.entries(ubiData.devices)) {
+			ubiSection.append(this.createUbiDeviceTable(deviceName, deviceInfo));
+			ubiSection.append(this.createUbiVolumesTable(deviceInfo.volumes));
+		}
+
+		return ubiSection;
+	},
+
 	load() {
 		this.restoreSettingsFromLocalStorage();
 		return L.resolveDefault(this.callDevices(), []);
@@ -986,12 +1144,33 @@ return view.extend({
 			}).catch(e => ui.addNotification(null, E('p', {}, e.message)));
 		};
 
-		return E([
+		// UBI devices section
+		let ubiNode = null;
+		if(devicesData.ubi && devicesData.ubi.devices && Object.keys(devicesData.ubi.devices).length > 0) {
+			ubiNode = E('div', { 'class': 'cbi-section fade-in' },
+				E('div', { 'class': 'cbi-section-node' },
+					this.createUbiSection(devicesData.ubi)
+				)
+			);
+		}
+
+		let result = [
 			E('h2', { 'class': 'fade-in' }, _('Disk Devices')),
 			E('div', { 'class': 'cbi-section-descr fade-in' },
 				_("Status of connected disk devices.")),
 			devicesNode,
-		]);
+		];
+
+		if(ubiNode) {
+			result.push(
+				E('h2', { 'class': 'fade-in' }, _('NAND Devices (UBI)')),
+				E('div', { 'class': 'cbi-section-descr fade-in' },
+					_("Status of connected NAND/UBI devices.")),
+				ubiNode
+			);
+		}
+
+		return E(result);
 	},
 
 	handleSaveApply: null,
